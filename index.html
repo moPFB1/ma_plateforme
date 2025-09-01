@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Découvrez IFRS17 PAA : la plateforme intelligente pour simplifier les calculs PAA, la gestion des contrats d'assurance et le reporting financier, boostée par une IA révolutionnaire.">
+    <meta name="keywords" content="IFRS17, PAA, calculs assurance, IA finance, reporting comptable, gestion contrats assurance">
+    <meta property="og:title" content="IFRS17 PAA | Plateforme intelligente pour IFRS17">
+    <meta property="og:description" content="Simplifiez vos processus IFRS17 avec notre solution IA : calculs PAA automatisés, reporting prédictif et gestion centralisée.">
+    <meta property="og:image" content="https://example.com/og-image.jpg"> <!-- Remplacez par une image réelle -->
+    <meta property="og:url" content="https://example.com">
+    <title>IFRS17 PAA | Plateforme Intelligente pour Calculs PAA et Reporting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' },
+                        accent: { 500: '#10b981' } // Ajout d'une couleur accent pour plus de variété
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 
+                        'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        'hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                    },
+                    animation: {
+                        fadeIn: 'fadeIn 1s ease-in-out',
+                        slideUp: 'slideUp 0.5s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hero-bg { background: linear-gradient(135deg, #0ea5e9 0%, #075985 100%); }
+        .feature-card { transition: all 0.3s ease; }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: var(--tw-shadow-hover); }
+        .cta-button { transition: all 0.3s ease; }
+        .cta-button:hover { transform: scale(1.05); }
+        .animate-fadeIn { animation: fadeIn 1s ease-in-out; }
+        .animate-slideUp { animation: slideUp 0.5s ease-out; }
+        /* Amélioration pour les scrolls smooth */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <!-- Header amélioré avec navigation plus complète -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+            <div class="flex items-center">
+                <i data-lucide="bar-chart-2" class="w-8 h-8 text-primary-500 mr-3" aria-hidden="true"></i>
+                <span class="text-2xl font-bold text-dark-900">IFRS17 PAA</span>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#features" class="text-gray-600 hover:text-primary-600 font-medium">Fonctionnalités</a>
+                <a href="#usp" class="text-gray-600 hover:text-primary-600 font-medium">Avantages</a>
+                <a href="#testimonials" class="text-gray-600 hover:text-primary-600 font-medium">Témoignages</a>
+                <a href="#pricing" class="text-gray-600 hover:text-primary-600 font-medium">Tarifs</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="login.html" class="text-primary-600 hover:text-primary-800 font-medium">Connexion</a>
+                <a href="#contact" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-500 cta-button">Demander une démo</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section améliorée avec stats et animation -->
+    <section class="hero-bg text-white py-24 relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-10"></div> <!-- Overlay pour meilleur contraste -->
+        <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn">Simplifiez vos calculs IFRS17 PAA avec notre plateforme intelligente</h1>
+            <p class="text-lg md:text-2xl mb-8 max-w-3xl mx-auto animate-slideUp">Une solution intuitive et puissante pour gérer vos contrats, calculs PAA, et rapports financiers, boostée par une IA révolutionnaire qui réduit les erreurs de 70% et accélère les processus de 50%.</p>
+            <div class="flex justify-center space-x-4 mb-8">
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                    <p class="text-xl font-bold">+500</p>
+                    <p class="text-sm">Utilisateurs satisfaits</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                    <p class="text-xl font-bold">99.9%</p>
+                    <p class="text-sm">Précision des calculs</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                    <p class="text-xl font-bold">24/7</p>
+                    <p class="text-sm">Support disponible</p>
+                </div>
+            </div>
+            <a href="#contact" class="bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 cta-button animate-slideUp">Découvrir maintenant</a>
+        </div>
+    </section>
+
+    <!-- Features Section améliorée avec animations et icônes plus dynamiques -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-dark-900 mb-12 animate-fadeIn">Pourquoi choisir IFRS17 PAA ?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.1s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="file-text" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Gestion centralisée des contrats</h3>
+                    </div>
+                    <p class="text-gray-600">Importez, gérez et suivez facilement vos contrats d'assurance avec une interface intuitive. Supporte l'importation CSV, Excel et la gestion de groupes multiples pour une organisation optimale.</p>
+                </div>
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.2s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="calculator" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Calculs PAA automatisés par IA</h3>
+                    </div>
+                    <p class="text-gray-600">Notre agent IA unique analyse et calcule automatiquement les CSM, LRC et autres métriques avec une précision inégalée, réduisant les erreurs humaines et accélérant vos processus de manière exponentielle.</p>
+                </div>
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.3s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="pie-chart" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Reporting intelligent</h3>
+                    </div>
+                    <p class="text-gray-600">Générez des rapports détaillés, visuels et exportables (PDF, CSV, Excel) en un clic, avec des analyses prédictives alimentées par IA pour des décisions stratégiques éclairées.</p>
+                </div>
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.4s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="layout-dashboard" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Tableaux de bord dynamiques</h3>
+                    </div>
+                    <p class="text-gray-600">Visualisez l'évolution de vos KPI (CSM, LRC, contrats) avec des graphiques interactifs, personnalisables et en temps réel pour un suivi précis et intuitif.</p>
+                </div>
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.5s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="lock" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Sécurité et conformité</h3>
+                    </div>
+                    <p class="text-gray-600">Conforme aux normes IFRS17 et RGPD, notre plateforme garantit la sécurité des données avec chiffrement AES-256 de bout en bout, audits réguliers et backups automatisés.</p>
+                </div>
+                <div class="feature-card bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.6s;">
+                    <div class="flex items-center mb-4">
+                        <i data-lucide="headphones" class="w-10 h-10 text-primary-600 mr-3" aria-hidden="true"></i>
+                        <h3 class="text-xl font-semibold text-dark-900">Support client dédié</h3>
+                    </div>
+                    <p class="text-gray-600">Bénéficiez d'un support 24/7 multilingue avec une équipe d'experts en IFRS17 pour répondre à vos questions, former vos équipes et optimiser votre utilisation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- USP Section améliorée avec plus de détails et animations -->
+    <section id="usp" class="py-20 bg-primary-50">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-dark-900 mb-6 animate-fadeIn">Ce qui nous rend uniques</h2>
+            <p class="text-lg text-gray-600 mb-12 max-w-3xl mx-auto animate-slideUp">Notre agent IA révolutionnaire redéfinit la gestion des contrats IFRS17 PAA. Contrairement aux solutions traditionnelles, notre IA analyse en profondeur vos données pour des calculs PAA précis, des rapports prédictifs et une automatisation avancée, vous offrant un avantage concurrentiel décisif.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.1s;">
+                    <i data-lucide="brain-circuit" class="w-12 h-12 text-accent-500 mx-auto mb-4" aria-hidden="true"></i>
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">IA avancée pour calculs PAA</h3>
+                    <p class="text-gray-600">Traitement en temps réel de milliers de contrats, détection d'anomalies et ajustements automatiques des CSM et LRC, réduisant les risques d'erreurs coûteuses de 80%.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.2s;">
+                    <i data-lucide="trending-up" class="w-12 h-12 text-accent-500 mx-auto mb-4" aria-hidden="true"></i>
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">Reporting prédictif</h3>
+                    <p class="text-gray-600">Anticipez les tendances avec des analyses IA basées sur l'apprentissage automatique, pour des prévisions fiables et des stratégies proactives.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.3s;">
+                    <i data-lucide="zap" class="w-12 h-12 text-accent-500 mx-auto mb-4" aria-hidden="true"></i>
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">Intégrations fluides</h3>
+                    <p class="text-gray-600">Connectez-vous facilement à vos outils existants (ERP, CRM, bases de données) via API sécurisées pour une synchronisation automatique des données.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section améliorée avec avatars placeholders et animations -->
+    <section id="testimonials" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-dark-900 mb-12 animate-fadeIn">Ce que disent nos clients</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp" style="animation-delay: 0.1s;">
+                    <img src="https://via.placeholder.com/50?text=MD" alt="Avatar de Marie Dubois" class="w-12 h-12 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 italic mb-4">"La plateforme IFRS17 PAA a transformé notre gestion des contrats. L'IA nous a permis de réduire de 50% le temps consacré aux calculs !"</p>
+                    <p class="font-semibold text-dark-900">Marie Dubois, CFO Éclat Vie</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp" style="animation-delay: 0.2s;">
+                    <img src="https://via.placeholder.com/50?text=JM" alt="Avatar de Jean Martin" class="w-12 h-12 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 italic mb-4">"Les rapports prédictifs nous ont donné un avantage stratégique clair. Une solution incontournable pour la conformité IFRS17."</p>
+                    <p class="font-semibold text-dark-900">Jean Martin, Directeur Financier</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp" style="animation-delay: 0.3s;">
+                    <img src="https://via.placeholder.com/50?text=SL" alt="Avatar de Sophie Laurent" class="w-12 h-12 rounded-full mx-auto mb-4">
+                    <p class="text-gray-600 italic mb-4">"L'interface est intuitive et le support client exceptionnel. Nous recommandons vivement IFRS17 PAA !"</p>
+                    <p class="font-semibold text-dark-900">Sophie Laurent, Actuaire</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nouvelle Section : Tarifs (Pricing) pour ajouter de la valeur -->
+    <section id="pricing" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-dark-900 mb-6 animate-fadeIn">Choisissez votre plan</h2>
+            <p class="text-lg text-gray-600 mb-12 max-w-3xl mx-auto animate-slideUp">Des tarifs flexibles adaptés à vos besoins, avec une essai gratuit de 14 jours.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.1s;">
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">Starter</h3>
+                    <p class="text-3xl font-bold text-primary-600 mb-4">29€/mois</p>
+                    <ul class="text-gray-600 space-y-2 mb-6">
+                        <li>Gestion basique des contrats</li>
+                        <li>Calculs PAA automatisés</li>
+                        <li>Reporting standard</li>
+                    </ul>
+                    <a href="#contact" class="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-500 cta-button">Commencer</a>
+                </div>
+                <div class="bg-white rounded-xl shadow-card p-6 border-2 border-primary-600 relative animate-slideUp" style="animation-delay: 0.2s;">
+                    <span class="absolute top-0 right-0 bg-accent-500 text-white px-3 py-1 rounded-bl-lg text-sm font-semibold">Populaire</span>
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">Pro</h3>
+                    <p class="text-3xl font-bold text-primary-600 mb-4">99€/mois</p>
+                    <ul class="text-gray-600 space-y-2 mb-6">
+                        <li>Toutes les fonctionnalités Starter</li>
+                        <li>IA avancée et prédictive</li>
+                        <li>Tableaux de bord dynamiques</li>
+                        <li>Support prioritaire</li>
+                    </ul>
+                    <a href="#contact" class="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-500 cta-button">Commencer</a>
+                </div>
+                <div class="bg-white rounded-xl shadow-card p-6 border border-gray-100 animate-slideUp" style="animation-delay: 0.3s;">
+                    <h3 class="text-xl font-semibold text-dark-900 mb-4">Enterprise</h3>
+                    <p class="text-3xl font-bold text-primary-600 mb-4">Sur mesure</p>
+                    <ul class="text-gray-600 space-y-2 mb-6">
+                        <li>Toutes les fonctionnalités Pro</li>
+                        <li>Intégrations personnalisées</li>
+                        <li>Formation dédiée</li>
+                        <li>Audits et conformité avancée</li>
+                    </ul>
+                    <a href="#contact" class="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-500 cta-button">Contactez-nous</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nouvelle Section : FAQ pour améliorer l'engagement -->
+    <section id="faq" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-dark-900 mb-12 animate-fadeIn">Questions fréquentes</h2>
+            <div class="space-y-6">
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp">
+                    <h3 class="text-xl font-semibold text-dark-900 mb-2">Qu'est-ce que l'IFRS17 PAA ?</h3>
+                    <p class="text-gray-600">IFRS17 PAA est une plateforme pour la gestion des contrats d'assurance conforme à IFRS17, avec focus sur l'approche PAA (Premium Allocation Approach) via IA.</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp" style="animation-delay: 0.1s;">
+                    <h3 class="text-xl font-semibold text-dark-900 mb-2">Comment l'IA aide-t-elle aux calculs ?</h3>
+                    <p class="text-gray-600">Notre IA automatise les calculs CSM et LRC, détecte les anomalies et fournit des prédictions pour optimiser vos rapports.</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6 shadow-card animate-slideUp" style="animation-delay: 0.2s;">
+                    <h3 class="text-xl font-semibold text-dark-900 mb-2">Est-ce sécurisé ?</h3>
+                    <p class="text-gray-600">Oui, avec chiffrement de bout en bout, conformité RGPD et audits réguliers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section améliorée avec formulaire simple -->
+    <section id="contact" class="py-20 bg-primary-600 text-white">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 animate-fadeIn">Prêt à transformer votre gestion IFRS17 ?</h2>
+            <p class="text-lg mb-8 max-w-3xl mx-auto animate-slideUp">Demandez une démo gratuite dès aujourd'hui et découvrez comment notre plateforme peut optimiser vos processus financiers.</p>
+            <form class="max-w-md mx-auto space-y-4">
+                <input type="email" placeholder="Votre email" class="w-full px-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-400">
+                <button type="submit" class="bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 cta-button w-full">Demander une démo</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer amélioré avec réseaux sociaux -->
+    <footer class="bg-dark-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">IFRS17 PAA</h3>
+                    <p class="text-gray-400">La solution ultime pour la gestion des contrats et calculs IFRS17, boostée par l'IA.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Liens utiles</h3>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-400 hover:text-primary-400">Tableau de bord</a></li>
+                        <li><a href="contract.html" class="text-gray-400 hover:text-primary-400">Contrats</a></li>
+                        <li><a href="calculs.html" class="text-gray-400 hover:text-primary-400">Calculs PAA</a></li>
+                        <li><a href="reporting.html" class="text-gray-400 hover:text-primary-400">Reporting</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Ressources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#faq" class="text-gray-400 hover:text-primary-400">FAQ</a></li>
+                        <li><a href="#blog" class="text-gray-400 hover:text-primary-400">Blog</a></li>
+                        <li><a href="#privacy" class="text-gray-400 hover:text-primary-400">Politique de confidentialité</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <p class="text-gray-400">Email: <a href="mailto:contact@x.ai" class="hover:text-primary-400">contact@x.ai</a></p>
+                    <p class="text-gray-400">Téléphone: +33 1 23 45 67 89</p>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-6 h-6 text-gray-400 hover:text-primary-400"></i></a>
+                        <a href="#" aria-label="Twitter"><i data-lucide="twitter" class="w-6 h-6 text-gray-400 hover:text-primary-400"></i></a>
+                        <a href="#" aria-label="Facebook"><i data-lucide="facebook" class="w-6 h-6 text-gray-400 hover:text-primary-400"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-gray-400">
+                <p>&copy; 2025 IFRS17 PAA. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

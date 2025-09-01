@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PPA | Reporting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="../frontend/static/css/dashboard.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+   
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dark-900 text-white">
+                <div class="flex items-center justify-between h-16 px-6 border-b sidebar-divider">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6 text-primary-400 mr-2" aria-hidden="true"></i>
+                        <span class="text-xl font-semibold">IFRS17 PAA</span>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-grow px-4 py-6 overflow-y-auto">
+                    <nav class="space-y-1">
+                        <a href="base.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Tableau de bord
+                        </a>
+                        <a href="contract.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Contrats
+                        </a>
+                        <a href="calculs.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="calculator" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Calculs PAA
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-800 text-white" aria-current="page">
+                            <i data-lucide="pie-chart" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Reporting
+                        </a>
+                        <a href="settings.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Paramètres
+                        </a>
+                    </nav>
+                    <div class="mt-auto px-4 pt-6">
+                        <div class="bg-dark-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <img src="https://picsum.photos/40?random=3" alt="Photo de profil" class="rounded-full w-10 h-10">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-white">Admin User</p>
+                                    <p class="text-xs text-gray-400">Administrateur</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-2xl font-bold text-dark-900">Reporting PPA</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Rechercher des rapports">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" aria-hidden="true"></i>
+                        </div>
+                        <button class="p-2 text-gray-500 hover:text-gray-700 relative" aria-label="Notifications">
+                            <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-6">
+                <!-- Toast Notification -->
+                <div id="toast" class="toast bg-green-500 text-white p-4 rounded-lg shadow-lg">
+                    Action effectuée avec succès !
+                </div>
+
+                <!-- Report Filters -->
+                <div class="bg-white rounded-xl shadow-card p-6 mb-8 border border-gray-100">
+                    <h3 class="font-semibold text-gray-800 mb-4">Filtres de Rapport</h3>
+                    <form id="reportFilterForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="filterGroup" class="block text-sm font-medium text-gray-700">Groupe de Contrats</label>
+                            <select id="filterGroup" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600">
+                                <option value="all">Tous les groupes</option>
+                                <option value="Groupe A">Groupe A</option>
+                                <option value="Groupe B">Groupe B</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filterPeriod" class="block text-sm font-medium text-gray-700">Période</label>
+                            <select id="filterPeriod" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600">
+                                <option value="12">12 mois</option>
+                                <option value="6">6 mois</option>
+                                <option value="3">3 mois</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filterMetric" class="block text-sm font-medium text-gray-700">Métrique</label>
+                            <select id="filterMetric" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600">
+                                <option value="all">Toutes</option>
+                                <option value="csm">CSM</option>
+                                <option value="lrc">LRC</option>
+                                <option value="ra">RA</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Évolution des Métriques IFRS17</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="chartMetric" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Métrique pour l'évolution">
+                                    <option value="csm">CSM</option>
+                                    <option value="lrc">LRC</option>
+                                    <option value="ra">RA</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="metricsChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Répartition par Groupe</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="groupPeriod" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Filtre par période">
+                                    <option value="12">12 mois</option>
+                                    <option value="6">6 mois</option>
+                                    <option value="3">3 mois</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="groupChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics Summary by Group -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Résumé des Métriques par Groupe</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="exportMetricsCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="metricsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CSM Total (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LRC Total (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RA Total (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nb Contrats</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="metricsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Variance Analysis -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Analyse des Écarts</h3>
+                        <div class="flex items-center space-x-2">
+                            <select id="varianceMetric" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Métrique pour l'analyse des écarts">
+                                <option value="csm">CSM</option>
+                                <option value="lrc">LRC</option>
+                                <option value="ra">RA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                        <canvas id="varianceChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Report Summary Table -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Résumé des Rapports PPA - Assurance Éclat Vie</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="generateReport" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Générer un rapport">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Générer Rapport
+                            </button>
+                            <button id="exportCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                            <button id="exportPDF" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en PDF">
+                                <i data-lucide="file" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="reportsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="reportId">ID Rapport</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="group">Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="date">Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="csm">CSM (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="lrc">LRC (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="ra">RA (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="contracts">Nb Contrats</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="reportsBody">
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">RPT001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Groupe A</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">2025-07-01</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">€500,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">€450,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">€100,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">75</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="view-btn text-primary-600 hover:text-primary-800" data-id="RPT001" aria-label="Voir le rapport RPT001"><i data-lucide="eye" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="RPT001" aria-label="Supprimer le rapport RPT001"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <div class="text-sm text-gray-500" id="paginationInfo">Affichage de <span class="font-medium">1</span> à <span class="font-medium">1</span> sur <span class="font-medium">1</span> entrées</div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" id="prevPage" disabled aria-label="Page précédente">Précédent</button>
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" id="nextPage" disabled aria-label="Page suivante">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Generation History -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Historique des Rapports Générés</h3>
+                        <div class="flex items-center space-x-2">
+                            <select id="historyPeriod" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Période pour l'historique">
+                                <option value="12">12 mois</option>
+                                <option value="6">6 mois</option>
+                                <option value="3">3 mois</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                        <canvas id="historyChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Modal for Viewing Report Details -->
+        <div id="viewReportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-content">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Détails du Rapport</h3>
+                <div id="reportDetails">
+                    <p><strong>ID Rapport:</strong> <span id="detailReportId"></span></p>
+                    <p><strong>Groupe:</strong> <span id="detailGroup"></span></p>
+                    <p><strong>Date:</strong> <span id="detailDate"></span></p>
+                    <p><strong>CSM (€):</strong> <span id="detailCSM"></span></p>
+                    <p><strong>LRC (€):</strong> <span id="detailLRC"></span></p>
+                    <p><strong>RA (€):</strong> <span id="detailRA"></span></p>
+                    <p><strong>Nombre de Contrats:</strong> <span id="detailContracts"></span></p>
+                </div>
+                <button id="closeModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+            </div>
+        </div>
+
+        <script src="../frontend/static/js/reporting.js"></script>
+    </body>
+</html>

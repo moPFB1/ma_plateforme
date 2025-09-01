@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PAA | Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../frontend/static/css/login.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+ 
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased flex items-center justify-center min-h-screen">
+    <div class="max-w-md w-full px-6">
+        <!-- Login Card -->
+        <div class="login-card bg-white rounded-xl shadow-card p-8 border border-gray-100">
+            <div class="flex items-center justify-center mb-8">
+                <i data-lucide="bar-chart-2" class="w-10 h-10 text-primary-500 mr-3" aria-hidden="true"></i>
+                <h1 class="text-2xl font-bold text-dark-900">IFRS17 PAA</h1>
+            </div>
+            <h2 class="text-xl font-semibold text-center text-dark-900 mb-6">Connexion à votre espace</h2>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
+                    <div class="relative mt-1">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true"></i>
+                        <input type="email" id="email" name="email" class="input-focus w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required aria-describedby="emailError" placeholder="votre.email@exemple.com">
+                        <p id="emailError" class="text-red-600 text-sm mt-1 hidden">Veuillez entrer une adresse e-mail valide.</p>
+                    </div>
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                    <div class="relative mt-1">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true"></i>
+                        <input type="password" id="password" name="password" class="input-focus w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required aria-describedby="passwordError" placeholder="••••••••">
+                        <p id="passwordError" class="text-red-600 text-sm mt-1 hidden">Le mot de passe est requis.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 text-sm text-gray-600">Se souvenir de moi</label>
+                    </div>
+                    <a href="#forgot-password" class="text-sm text-primary-600 hover:text-primary-800">Mot de passe oublié ?</a>
+                </div>
+                <button type="submit" class="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-500 transition-all duration-300" aria-label="Se connecter">Se connecter</button>
+            </form>
+            <p class="mt-6 text-center text-sm text-gray-600">
+                Pas de compte ? <a href="#signup" class="text-primary-600 hover:text-primary-800 font-medium">Demandez une démo</a>
+            </p>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast bg-red-500 text-white p-4 rounded-lg shadow-lg">
+            Une erreur s'est produite. Veuillez vérifier vos identifiants.
+        </div>
+    </div>
+
+<script>
+      // Toast notification
+        const showToast = (message, type = 'error') => {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        };
+
+        // Form validation
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+
+            let isValid = true;
+
+            // Reset error messages
+            emailError.classList.add('hidden');
+            passwordError.classList.add('hidden');
+
+            // Basic email validation
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            // Password validation
+            if (!password) {
+                passwordError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (isValid) {
+                // Simulate login (replace with actual authentication logic)
+                if (email === 'admin@eclatvie.com' && password === 'password123') {
+                    showToast('Connexion réussie ! Redirection...', 'success');
+                    setTimeout(() => window.location.href = "../dashboard/base.html", 2000);
+                } else {
+                    showToast('Identifiants incorrects. Veuillez réessayer.', 'error');
+                }
+            }
+        });
+
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+</script>
+</body>
+</html>

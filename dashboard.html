@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PPA | Dashboard Professionnel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloud.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-divider { border-color: rgba(255, 255, 255, 0.1); }
+        .data-card { transition: all 0.3s ease; }
+        .data-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 50; 
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content { 
+            background-color: white; 
+            margin: 15% auto; 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 90%; 
+            max-width: 500px; 
+            position: relative; 
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .toast { 
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            z-index: 100; 
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+        }
+        .sort-asc::after { content: " ↑"; }
+        .sort-desc::after { content: " ↓"; }
+        .pagination-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+        .status-active { background-color: #D1FAE5; color: #065F46; }
+        .status-pending { background-color: #FEF3C7; color: #92400E; }
+        .status-inactive { background-color: #FEE2E2; color: #B91C1C; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dark-900 text-white">
+                <div class="flex items-center justify-between h-16 px-6 border-b sidebar-divider">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6 text-primary-400 mr-2" aria-hidden="true"></i>
+                        <span class="text-xl font-semibold">IFRS17 PAA</span>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-grow px-4 py-6 overflow-y-auto">
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-800 text-white" aria-current="page">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Tableau de bord
+                        </a>
+                        <a href="contract.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Contrats
+                        </a>
+                        <a href="calculs.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="calculator" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Calculs PAA
+                        </a>
+                        <a href="reporting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="pie-chart" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Reporting
+                        </a>
+                        <a href="setting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Paramètres
+                        </a>
+                    </nav>
+                    <div class="mt-auto px-4 pt-6">
+                        <div class="bg-dark-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <img src="https://picsum.photos/40?random=3" alt="Photo de profil" class="rounded-full w-10 h-10">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-white">Admin User</p>
+                                    <p class="text-xs text-gray-400">Administrateur</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-2xl font-bold text-dark-900">Tableau de bord PPA</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Rechercher des données" id="searchInput">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" aria-hidden="true"></i>
+                        </div>
+                        <button class="p-2 text-gray-500 hover:text-gray-700 relative" aria-label="Notifications" id="notificationsBtn">
+                            <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-6">
+                <!-- Toast Notification -->
+                <div id="toast" class="toast bg-green-500 text-white p-4 rounded-lg shadow-lg">
+                    Action effectuée avec succès !
+                </div>
+
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="data-card bg-white rounded-xl shadow-card p-6 border border-gray-100">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">CSM Total</p>
+                                <p class="mt-2 text-3xl font-semibold text-dark-900">€1,250,000</p>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1" aria-hidden="true"></i>
+                                    <span>+5.2% ce mois-ci</span>
+                                </div>
+                            </div>
+                            <div class="bg-primary-50 p-3 rounded-lg">
+                                <i data-lucide="dollar-sign" class="w-6 h-6 text-primary-600" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Autres KPIs identiques avec ajout d'aria-label -->
+                    <div class="data-card bg-white rounded-xl shadow-card p-6 border border-gray-100">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">LRC Total</p>
+                                <p class="mt-2 text-3xl font-semibold text-dark-900">€950,000</p>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i data-lucide="trending-down" class="w-4 h-4 text-red-500 mr-1" aria-hidden="true"></i>
+                                    <span>-3.1% ce mois-ci</span>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <i data-lucide="file-text" class="w-6 h-6 text-green-600" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-card bg-white rounded-xl shadow-card p-6 border border-gray-100">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Contrats</p>
+                                <p class="mt-2 text-3xl font-semibold text-dark-900">145</p>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i data-lucide="database" class="w-4 h-4 text-blue-500 mr-1" aria-hidden="true"></i>
+                                    <span>+12 nouveaux</span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-3 rounded-lg">
+                                <i data-lucide="file-check" class="w-6 h-6 text-purple-600" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="data-card bg-white rounded-xl shadow-card p-6 border border-gray-100">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Dernière MAJ</p>
+                                <p class="mt-2 text-3xl font-semibold text-dark-900">02/07/2025</p>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i data-lucide="clock" class="w-4 h-4 text-yellow-500 mr-1" aria-hidden="true"></i>
+                                    <span>11:20 AM</span>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <i data-lucide="refresh-cw" class="w-6 h-6 text-yellow-600" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Évolution du CSM</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="csmPeriod" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Période pour l'évolution du CSM">
+                                    <option value="12">12 mois</option>
+                                    <option value="6">6 mois</option>
+                                    <option value="3">3 mois</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="csmChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Répartition par groupe</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="groupFilter" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Filtre par groupe">
+                                    <option value="all">Tous les groupes</option>
+                                    <option value="Groupe A">Groupe A</option>
+                                    <option value="Groupe B">Groupe B</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="groupChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tables -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Contrats PPA - Assurance Éclat Vie</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="addContractBtn" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Ajouter un contrat">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Ajouter
+                            </button>
+                            <button id="exportCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                            <button id="exportPDF" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en PDF">
+                                <i data-lucide="file" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="contractsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="contractId">ID Contrat</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="group">Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="csm">CSM Initial</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="lrc">LRC Initial</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="status">Statut</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="contractsBody">
+                                <!-- Les données seront chargées dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <div class="text-sm text-gray-500" id="paginationInfo">Affichage de <span class="font-medium" id="startItem">0</span> à <span class="font-medium" id="endItem">0</span> sur <span class="font-medium" id="totalItems">0</span> entrées</div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 pagination-btn" id="prevPage" disabled aria-label="Page précédente">Précédent</button>
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 pagination-btn" id="nextPage" disabled aria-label="Page suivante">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Steps -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h3 class="font-semibold text-gray-800">Processus PPA - Assurance Éclat Vie</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="relative">
+                            <div class="absolute left-5 top-0 h-full w-0.5 bg-gray-200"></div>
+                            <div class="space-y-8">
+                                <div class="relative flex items-start group">
+                                    <div class="absolute left-5 h-8 w-0.5 bg-primary-500 -translate-y-8"></div>
+                                    <div class="flex-shrink-0 relative z-10">
+                                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary-100 border-2 border-primary-500">
+                                            <i data-lucide="upload" class="w-5 h-5 text-primary-600" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-6">
+                                        <h4 class="text-base font-medium text-gray-800">1. Import des données</h4>
+                                        <p class="mt-1 text-sm text-gray-500">Importation de 145 contrats d'assurance vie d'Éclat Vie</p>
+                                        <button id="viewImports" class="mt-3 inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Voir les imports">Voir les imports<i data-lucide="arrow-right" class="w-4 h-4 ml-1" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
+                                <!-- Autres étapes similaires -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="addContractModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Ajouter un contrat</h3>
+            <form id="addContractForm">
+                <input type="hidden" id="editingContractId">
+                <div class="mb-4">
+                    <label for="contractId" class="block text-sm font-medium text-gray-700">ID Contrat</label>
+                    <input type="text" id="contractId" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required aria-describedby="contractIdError">
+                    <p id="contractIdError" class="text-red-600 text-sm hidden">L'ID du contrat doit être unique.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="contractGroup" class="block text-sm font-medium text-gray-700">Groupe</label>
+                    <select id="contractGroup" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                        <option value="Groupe A">Groupe A</option>
+                        <option value="Groupe B">Groupe B</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="contractCSM" class="block text-sm font-medium text-gray-700">CSM Initial (€)</label>
+                    <input type="number" id="contractCSM" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0">
+                </div>
+                <div class="mb-4">
+                    <label for="contractLRC" class="block text-sm font-medium text-gray-700">LRC Initial (€)</label>
+                    <input type="number" id="contractLRC" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0">
+                </div>
+                <div class="mb-4">
+                    <label for="contractStatus" class="block text-sm font-medium text-gray-700">Statut</label>
+                    <select id="contractStatus" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                        <option value="Actif">Actif</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Inactif">Inactif</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Valider le contrat">Ajouter</button>
+            </form>
+            <button id="closeModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+        <div class="modal-content">
+            <h3 id="importModalTitle" class="text-lg font-semibold text-gray-800 mb-4">Imports réalisés</h3>
+            <form id="importForm" class="mb-4">
+                <label for="importFile" class="block text-sm font-medium text-gray-700">Importer un fichier CSV</label>
+                <input type="file" id="importFile" accept=".csv" class="mt-1 p-2 w-full border border-gray-300 rounded-md">
+                <button type="submit" class="mt-2 bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500">Importer</button>
+            </form>
+            <ul id="importList" class="list-disc pl-5 space-y-2">
+                <li>Import 1: 50 contrats - 20/06/2025 10:15 AM</li>
+                <li>Import 2: 95 contrats - 22/06/2025 14:30 PM</li>
+            </ul>
+            <button id="closeImportModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        // Données d'exemple pour les contrats
+        let contractsData = [
+            { id: "C001", group: "Groupe A", csm: 50000, lrc: 45000, status: "Actif" },
+            { id: "C002", group: "Groupe B", csm: 75000, lrc: 60000, status: "Actif" },
+            { id: "C003", group: "Groupe A", csm: 30000, lrc: 25000, status: "En attente" },
+            { id: "C004", group: "Groupe B", csm: 90000, lrc: 80000, status: "Actif" },
+            { id: "C005", group: "Groupe A", csm: 40000, lrc: 35000, status: "Inactif" },
+            { id: "C006", group: "Groupe B", csm: 60000, lrc: 55000, status: "Actif" },
+            { id: "C007", group: "Groupe A", csm: 55000, lrc: 50000, status: "En attente" },
+            { id: "C008", group: "Groupe B", csm: 80000, lrc: 70000, status: "Actif" },
+            { id: "C009", group: "Groupe A", csm: 35000, lrc: 30000, status: "Inactif" },
+            { id: "C010", group: "Groupe B", csm: 70000, lrc: 65000, status: "Actif" }
+        ];
+
+        // Variables globales
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let currentSort = { column: null, direction: 'asc' };
+        let csmChartInstance = null;
+        let groupChartInstance = null;
+
+        // Initialisation lorsque le DOM est chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser les icônes Lucide
+            lucide.createIcons();
+
+            // Initialiser les graphiques
+            initCharts();
+            
+            // Charger les données des contrats
+            renderContractsTable();
+            
+            // Configurer les écouteurs d'événements
+            setupEventListeners();
+        });
+
+        // Initialiser les graphiques
+        function initCharts() {
+            // Données pour le graphique CSM
+            const csmCtx = document.getElementById('csmChart').getContext('2d');
+            const csmData = {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+                datasets: [{
+                    label: 'CSM (en milliers €)',
+                    data: [1200, 1100, 1150, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650],
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+
+            csmChartInstance = new Chart(csmCtx, {
+                type: 'line',
+                data: csmData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Données pour le graphique de répartition par groupe
+            const groupCtx = document.getElementById('groupChart').getContext('2d');
+            const groupData = {
+                labels: ['Groupe A', 'Groupe B'],
+                datasets: [{
+                    data: [65, 35],
+                    backgroundColor: [
+                        '#0ea5e9',
+                        '#8b5cf6'
+                    ],
+                    borderWidth: 0
+                }]
+            };
+
+            groupChartInstance = new Chart(groupCtx, {
+                type: 'doughnut',
+                data: groupData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Configurer les écouteurs d'événements
+        function setupEventListeners() {
+            // Bouton d'ajout de contrat
+            document.getElementById('addContractBtn').addEventListener('click', openAddContractModal);
+            
+            // Fermeture des modals
+            document.getElementById('closeModal').addEventListener('click', closeModals);
+            document.getElementById('closeImportModal').addEventListener('click', closeModals);
+            
+            // Soumission du formulaire d'ajout de contrat
+            document.getElementById('addContractForm').addEventListener('submit', handleContractSubmit);
+            
+            // Boutons d'export
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+            
+            // Pagination
+            document.getElementById('prevPage').addEventListener('click', goToPrevPage);
+            document.getElementById('nextPage').addEventListener('click', goToNextPage);
+            
+            // Recherche
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            
+            // Tri des colonnes
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.addEventListener('click', () => sortTable(header.dataset.sort));
+            });
+            
+            // Filtre de groupe
+            document.getElementById('groupFilter').addEventListener('change', filterByGroup);
+            
+            // Période CSM
+            document.getElementById('csmPeriod').addEventListener('change', updateCsmChart);
+            
+            // Voir les imports
+            document.getElementById('viewImports').addEventListener('click', openImportModal);
+            
+            // Import de fichier
+            document.getElementById('importForm').addEventListener('submit', handleFileImport);
+        }
+
+        // Afficher les contrats dans le tableau
+        function renderContractsTable(filteredData = null) {
+            const tbody = document.getElementById('contractsBody');
+            tbody.innerHTML = '';
+            
+            const data = filteredData || contractsData;
+            const totalItems = data.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            // Mettre à jour la pagination
+            updatePagination(totalItems, totalPages);
+            
+            // Calculer les indices de début et de fin
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            
+            // Mettre à jour l'information de pagination
+            document.getElementById('startItem').textContent = totalItems > 0 ? startIndex + 1 : 0;
+            document.getElementById('endItem').textContent = endIndex;
+            document.getElementById('totalItems').textContent = totalItems;
+            
+            // Remplir le tableau avec les données de la page courante
+            for (let i = startIndex; i < endIndex; i++) {
+                const contract = data[i];
+                const row = document.createElement('tr');
+                row.className = 'data-card';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${contract.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${contract.group}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">€${contract.csm.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">€${contract.lrc.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium status-${getStatusClass(contract.status)}">${contract.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="${contract.id}" aria-label="Modifier le contrat ${contract.id}">
+                            <i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i>
+                        </button>
+                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="${contract.id}" aria-label="Supprimer le contrat ${contract.id}">
+                            <i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Réinitialiser les icônes Lucide pour les nouveaux éléments
+            lucide.createIcons();
+            
+            // Ajouter les écouteurs d'événements pour les boutons d'édition et de suppression
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editContract(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteContract(btn.dataset.id));
+            });
+        }
+
+        // Obtenir la classe CSS pour le statut
+        function getStatusClass(status) {
+            switch (status.toLowerCase()) {
+                case 'actif': return 'active';
+                case 'en attente': return 'pending';
+                case 'inactif': return 'inactive';
+                default: return 'active';
+            }
+        }
+
+        // Mettre à jour la pagination
+        function updatePagination(totalItems, totalPages) {
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        // Aller à la page précédente
+        function goToPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderContractsTable();
+            }
+        }
+
+        // Aller à la page suivante
+        function goToNextPage() {
+            const totalPages = Math.ceil(contractsData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderContractsTable();
+            }
+        }
+
+        // Ouvrir le modal d'ajout de contrat
+        function openAddContractModal() {
+            document.getElementById('modalTitle').textContent = 'Ajouter un contrat';
+            document.getElementById('editingContractId').value = '';
+            document.getElementById('contractId').value = '';
+            document.getElementById('contractGroup').value = 'Groupe A';
+            document.getElementById('contractCSM').value = '';
+            document.getElementById('contractLRC').value = '';
+            document.getElementById('contractStatus').value = 'Actif';
+            document.getElementById('addContractForm').querySelector('button[type="submit"]').textContent = 'Ajouter';
+            
+            document.getElementById('addContractModal').style.display = 'flex';
+        }
+
+        // Fermer tous les modals
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // Gérer la soumission du formulaire de contrat
+        function handleContractSubmit(e) {
+            e.preventDefault();
+            
+            const contractId = document.getElementById('contractId').value;
+            const group = document.getElementById('contractGroup').value;
+            const csm = parseFloat(document.getElementById('contractCSM').value);
+            const lrc = parseFloat(document.getElementById('contractLRC').value);
+            const status = document.getElementById('contractStatus').value;
+            const editingId = document.getElementById('editingContractId').value;
+            
+            // Vérifier si l'ID est unique (sauf en mode édition)
+            if (!editingId && contractsData.some(contract => contract.id === contractId)) {
+                document.getElementById('contractIdError').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('contractIdError').classList.add('hidden');
+            
+            if (editingId) {
+                // Modifier le contrat existant
+                const index = contractsData.findIndex(contract => contract.id === editingId);
+                if (index !== -1) {
+                    contractsData[index] = { id: contractId, group, csm, lrc, status };
+                }
+            } else {
+                // Ajouter un nouveau contrat
+                contractsData.push({ id: contractId, group, csm, lrc, status });
+            }
+            
+            // Fermer le modal et rafraîchir le tableau
+            closeModals();
+            renderContractsTable();
+            showToast('Contrat enregistré avec succès');
+        }
+
+        // Éditer un contrat
+        function editContract(contractId) {
+            const contract = contractsData.find(c => c.id === contractId);
+            if (contract) {
+                document.getElementById('modalTitle').textContent = 'Modifier le contrat';
+                document.getElementById('editingContractId').value = contract.id;
+                document.getElementById('contractId').value = contract.id;
+                document.getElementById('contractGroup').value = contract.group;
+                document.getElementById('contractCSM').value = contract.csm;
+                document.getElementById('contractLRC').value = contract.lrc;
+                document.getElementById('contractStatus').value = contract.status;
+                document.getElementById('addContractForm').querySelector('button[type="submit"]').textContent = 'Modifier';
+                
+                document.getElementById('addContractModal').style.display = 'flex';
+            }
+        }
+
+        // Supprimer un contrat
+        function deleteContract(contractId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')) {
+                contractsData = contractsData.filter(contract => contract.id !== contractId);
+                renderContractsTable();
+                showToast('Contrat supprimé avec succès');
+            }
+        }
+
+        // Exporter en CSV
+        function exportToCSV() {
+            const headers = ['ID Contrat', 'Groupe', 'CSM Initial', 'LRC Initial', 'Statut'];
+            const csvData = contractsData.map(contract => [
+                contract.id,
+                contract.group,
+                `€${contract.csm.toLocaleString()}`,
+                `€${contract.lrc.toLocaleString()}`,
+                contract.status
+            ]);
+            
+            const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'contrats_ppa.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Export CSV réalisé avec succès');
+        }
+
+        // Exporter en PDF
+        function exportToPDF() {
+            const element = document.getElementById('contractsTable');
+            const options = {
+                margin: 10,
+                filename: 'contrats_ppa.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(options).from(element).save();
+            showToast('Export PDF réalisé avec succès');
+        }
+
+        // Gérer la recherche
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                renderContractsTable();
+                return;
+            }
+            
+            const filteredData = contractsData.filter(contract => 
+                contract.id.toLowerCase().includes(searchTerm) ||
+                contract.group.toLowerCase().includes(searchTerm) ||
+                contract.status.toLowerCase().includes(searchTerm)
+            );
+            
+            currentPage = 1;
+            renderContractsTable(filteredData);
+        }
+
+        // Trier le tableau
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Mettre à jour les indicateurs de tri visuels
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === column) {
+                    header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+            
+            // Trier les données
+            contractsData.sort((a, b) => {
+                let valueA = a[column.toLowerCase()];
+                let valueB = b[column.toLowerCase()];
+                
+                if (column === 'csm' || column === 'lrc') {
+                    valueA = a[column];
+                    valueB = b[column];
+                }
+                
+                if (valueA < valueB) return currentSort.direction === 'asc' ? -1 : 1;
+                if (valueA > valueB) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            renderContractsTable();
+        }
+
+        // Filtrer par groupe
+        function filterByGroup() {
+            const group = document.getElementById('groupFilter').value;
+            
+            if (group === 'all') {
+                renderContractsTable();
+                return;
+            }
+            
+            const filteredData = contractsData.filter(contract => contract.group === group);
+            currentPage = 1;
+            renderContractsTable(filteredData);
+        }
+
+        // Mettre à jour le graphique CSM
+        function updateCsmChart() {
+            const period = parseInt(document.getElementById('csmPeriod').value);
+            
+            // Simuler des données différentes selon la période
+            let labels, data;
+            
+            if (period === 12) {
+                labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+                data = [1200, 1100, 1150, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650];
+            } else if (period === 6) {
+                labels = ['Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+                data = [1400, 1450, 1500, 1550, 1600, 1650];
+            } else {
+                labels = ['Oct', 'Nov', 'Déc'];
+                data = [1550, 1600, 1650];
+            }
+            
+            csmChartInstance.data.labels = labels;
+            csmChartInstance.data.datasets[0].data = data;
+            csmChartInstance.update();
+        }
+
+        // Ouvrir le modal d'import
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+        }
+
+        // Gérer l'import de fichier
+        function handleFileImport(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        // Traiter les données importées
+                        const newContracts = results.data.map(row => ({
+                            id: row['ID Contrat'] || `C${Math.floor(1000 + Math.random() * 9000)}`,
+                            group: row.Groupe || 'Groupe A',
+                            csm: parseFloat(row['CSM Initial']) || 0,
+                            lrc: parseFloat(row['LRC Initial']) || 0,
+                            status: row.Statut || 'Actif'
+                        }));
+                        
+                        // Ajouter les nouveaux contrats
+                        contractsData = [...contractsData, ...newContracts];
+                        
+                        // Mettre à jour l'interface
+                        renderContractsTable();
+                        closeModals();
+                        showToast(`${newContracts.length} contrats importés avec succès`);
+                        
+                        // Mettre à jour la liste des imports
+                        const importList = document.getElementById('importList');
+                        const now = new Date();
+                        const importDate = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}`;
+                        const newImportItem = document.createElement('li');
+                        newImportItem.textContent = `Import: ${newContracts.length} contrats - ${importDate}`;
+                        importList.prepend(newImportItem);
+                    }
+                });
+            }
+        }
+
+        // Afficher une notification toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Fermer les modals en cliquant à l'extérieur
+        window.addEventListener('click', function(e) {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

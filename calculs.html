@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PPA | Calculs PPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="../frontend/static/css/dashboard.css">
+  <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+   
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dark-900 text-white">
+                <div class="flex items-center justify-between h-16 px-6 border-b sidebar-divider">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6 text-primary-400 mr-2" aria-hidden="true"></i>
+                        <span class="text-xl font-semibold">IFRS17 PAA</span>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-grow px-4 py-6 overflow-y-auto">
+                    <nav class="space-y-1">
+                        <a href="base.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Tableau de bord
+                        </a>
+                        <a href="contract.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Contrats
+                        </a>
+                        <a href="calculs.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-800 text-white" aria-current="page">
+                            <i data-lucide="calculator" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Calculs PAA
+                        </a>
+                        <a href="reporting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="pie-chart" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Reporting
+                        </a>
+                        <a href="setting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Paramètres
+                        </a>
+                    </nav>
+                    <div class="mt-auto px-4 pt-6">
+                        <div class="bg-dark-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <img src="https://picsum.photos/40?random=3" alt="Photo de profil" class="rounded-full w-10 h-10">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-white">Admin User</p>
+                                    <p class="text-xs text-gray-400">Administrateur</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-2xl font-bold text-dark-900">Calculs PPA</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Rechercher des calculs">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" aria-hidden="true"></i>
+                        </div>
+                        <button class="p-2 text-gray-500 hover:text-gray-700 relative" aria-label="Notifications">
+                            <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-6">
+                <!-- Toast Notification -->
+                <div id="toast" class="toast bg-green-500 text-white p-4 rounded-lg shadow-lg">
+                    Action effectuée avec succès !
+                </div>
+
+                <!-- PPA Calculation Form -->
+                <div class="bg-white rounded-xl shadow-card p-6 mb-8 border border-gray-100">
+                    <h3 class="font-semibold text-gray-800 mb-4">Nouveau Calcul PPA</h3>
+                    <form id="ppaCalculationForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="contractGroup" class="block text-sm font-medium text-gray-700">Groupe de Contrats</label>
+                                <select id="contractGroup" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                                    <option value="">Sélectionner un groupe</option>
+                                    <option value="Groupe A">Groupe A</option>
+                                    <option value="Groupe B">Groupe B</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="calculationDate" class="block text-sm font-medium text-gray-700">Date du Calcul</label>
+                                <input type="date" id="calculationDate" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                            </div>
+                            <div>
+                                <label for="cashFlow" class="block text-sm font-medium text-gray-700">Cash Flow Attendu (€)</label>
+                                <input type="number" id="cashFlow" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0">
+                            </div>
+                            <div>
+                                <label for="discountRate" class="block text-sm font-medium text-gray-700">Taux de Remise (%)</label>
+                                <input type="number" id="discountRate" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0">
+                            </div>
+                        </div>
+                        <button type="submit" class="mt-4 bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Effectuer le calcul PPA">Calculer</button>
+                    </form>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Évolution des Résultats PPA</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="ppaPeriod" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Période pour l'évolution des résultats PPA">
+                                    <option value="12">12 mois</option>
+                                    <option value="6">6 mois</option>
+                                    <option value="3">3 mois</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="ppaChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-gray-800">Répartition par Groupe</h3>
+                            <div class="flex items-center space-x-2">
+                                <select class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Filtre par groupe">
+                                    <option>Tous les groupes</option>
+                                    <option>Groupe A</option>
+                                    <option>Groupe B</option>
+                                </select>
+                                <button class="p-1.5 rounded-lg hover:bg-gray-50" aria-label="Options du graphique">
+                                    <i data-lucide="more-vertical" class="w-4 h-4 text-gray-500" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                            <canvas id="groupChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculation History Table -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Historique des Calculs PPA</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="exportCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                            <button id="exportPDF" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en PDF">
+                                <i data-lucide="file" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="calculationsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="calcId">ID Calcul</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="group">Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="date">Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="cashFlow">Cash Flow (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="discount">Taux de Remise (%)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="result">Résultat PPA (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="calculationsBody">
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">PPA001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Groupe A</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">2025-07-01</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">€100,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">2.5%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">€95,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="view-btn text-primary-600 hover:text-primary-800" data-id="PPA001" aria-label="Voir le calcul PPA001"><i data-lucide="eye" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="PPA001" aria-label="Supprimer le calcul PPA001"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <div class="text-sm text-gray-500" id="paginationInfo">Affichage de <span class="font-medium">1</span> à <span class="font-medium">1</span> sur <span class="font-medium">1</span> entrées</div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" id="prevPage" disabled aria-label="Page précédente">Précédent</button>
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50" id="nextPage" disabled aria-label="Page suivante">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Viewing Calculation Details -->
+    <div id="viewCalculationModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Détails du Calcul PPA</h3>
+            <div id="calculationDetails">
+                <p><strong>ID Calcul:</strong> <span id="detailCalcId"></span></p>
+                <p><strong>Groupe:</strong> <span id="detailGroup"></span></p>
+                <p><strong>Date:</strong> <span id="detailDate"></span></p>
+                <p><strong>Cash Flow (€):</strong> <span id="detailCashFlow"></span></p>
+                <p><strong>Taux de Remise (%):</strong> <span id="detailDiscount"></span></p>
+                <p><strong>Résultat PPA (€):</strong> <span id="detailResult"></span></p>
+            </div>
+            <button id="closeModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+        </div>
+    </div>
+
+<script src="../frontend/static/js/calculs.js"></script>
+</body>
+</html>

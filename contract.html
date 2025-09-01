@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PPA | Gestion des Contrats PPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloud.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-divider { border-color: rgba(255, 255, 255, 0.1); }
+        .data-card { transition: all 0.3s ease; }
+        .data-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 50; 
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content { 
+            background-color: white; 
+            margin: 15% auto; 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 90%; 
+            max-width: 500px; 
+            position: relative; 
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .toast { 
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            z-index: 100; 
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+        }
+        .sort-asc::after { content: " ↑"; }
+        .sort-desc::after { content: " ↓"; }
+        .pagination-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+        .status-active { background-color: #D1FAE5; color: #065F46; }
+        .status-pending { background-color: #FEF3C7; color: #92400E; }
+        .status-inactive { background-color: #FEE2E2; color: #B91C1C; }
+        @media (max-width: 640px) {
+            .sm\:table-mobile {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+            }
+            .sm\:table-mobile thead,
+            .sm\:table-mobile tbody,
+            .sm\:table-mobile th,
+            .sm\:table-mobile td,
+            .sm\:table-mobile tr {
+                display: block;
+            }
+            .sm\:table-mobile thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            .sm\:table-mobile tr {
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+            }
+            .sm\:table-mobile td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+                white-space: normal;
+                text-align: left;
+            }
+            .sm\:table-mobile td:before {
+                position: absolute;
+                top: 50%;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                transform: translateY(-50%);
+                font-weight: bold;
+                content: attr(data-label);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dark-900 text-white">
+                <div class="flex items-center justify-between h-16 px-6 border-b sidebar-divider">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6 text-primary-400 mr-2" aria-hidden="true"></i>
+                        <span class="text-xl font-semibold">IFRS17 PAA</span>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-grow px-4 py-6 overflow-y-auto">
+                    <nav class="space-y-1">
+                        <a href="base.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Tableau de bord
+                        </a>
+                        <a href="contract.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-800 text-white" aria-current="page">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Contrats
+                        </a>
+                        <a href="calculs.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="calculator" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Calculs PAA
+                        </a>
+                        <a href="reporting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="pie-chart" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Reporting
+                        </a>
+                        <a href="setting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Paramètres
+                        </a>
+                    </nav>
+                    <div class="mt-auto px-4 pt-6">
+                        <div class="bg-dark-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <img src="https://picsum.photos/40?random=3" alt="Photo de profil" class="rounded-full w-10 h-10">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-white">Admin User</p>
+                                    <p class="text-xs text-gray-400">Administrateur</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-dark-900">Gestion des Contrats PPA</h1>
+                        <p id="current-time" class="text-sm text-gray-500"></p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-64">
+                            <input type="text" id="contract-search" placeholder="Rechercher un contrat..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Rechercher un contrat">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" aria-hidden="true"></i>
+                        </div>
+                        <button class="p-2 text-gray-500 hover:text-gray-700 relative" aria-label="Notifications">
+                            <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Contrats PPA Content -->
+            <main class="p-6">
+                <!-- Toast Notification -->
+                <div id="toast" class="toast bg-green-500 text-white p-4 rounded-lg shadow-lg">
+                    Action effectuée avec succès !
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow-card p-6 mb-6 border border-gray-100">
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="groupFilter" class="block text-sm font-medium text-gray-700">Groupe</label>
+                            <select id="groupFilter" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" aria-describedby="groupFilterDesc">
+                                <option value="">Tous</option>
+                                <option value="Groupe A">Groupe A</option>
+                                <option value="Groupe B">Groupe B</option>
+                            </select>
+                            <p id="groupFilterDesc" class="sr-only">Filtrer les contrats par groupe</p>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="statusFilter" class="block text-sm font-medium text-gray-700">Statut</label>
+                            <select id="statusFilter" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" aria-describedby="statusFilterDesc">
+                                <option value="">Tous</option>
+                                <option value="Actif">Actif</option>
+                                <option value="En attente">En attente</option>
+                                <option value="Inactif">Inactif</option>
+                            </select>
+                            <p id="statusFilterDesc" class="sr-only">Filtrer les contrats par statut</p>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="dateFilter" class="block text-sm font-medium text-gray-700">Date Début</label>
+                            <input type="date" id="dateFilter" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" aria-describedby="dateFilterDesc">
+                            <p id="dateFilterDesc" class="sr-only">Filtrer les contrats par date de début</p>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="premiumMin" class="block text-sm font-medium text-gray-700">Prime Min (€)</label>
+                            <input type="number" id="premiumMin" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" min="0" aria-describedby="premiumMinDesc">
+                            <p id="premiumMinDesc" class="sr-only">Filtrer les contrats par prime minimale</p>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="premiumMax" class="block text-sm font-medium text-gray-700">Prime Max (€)</label>
+                            <input type="number" id="premiumMax" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" min="0" aria-describedby="premiumMaxDesc">
+                            <p id="premiumMaxDesc" class="sr-only">Filtrer les contrats par prime maximale</p>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="resetFilters" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300" aria-label="Réinitialiser les filtres">Réinitialiser</button>
+                            <button id="analyzeIA" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-500 flex items-center gap-2" aria-label="Lancer l'analyse IA">
+                                <i data-lucide="brain" class="w-5 h-5" aria-hidden="true"></i> Analyse IA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-6">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Répartition des Primes</h3>
+                        <div class="flex items-center space-x-2">
+                            <select id="chartFilter" class="text-sm border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Filtrer le graphique">
+                                <option value="group">Par Groupe</option>
+                                <option value="status">Par Statut</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="p-6 h-80 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                        <canvas id="premiumChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Contrats Table -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Contrats PPA - Assurance Éclat Vie</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="addContract" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Ajouter un contrat">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Ajouter
+                            </button>
+                            <button id="importCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Importer un fichier CSV">
+                                <i data-lucide="upload" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Importer CSV
+                            </button>
+                            <button id="exportCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                            <button id="exportPDF" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en PDF">
+                                <i data-lucide="file" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter PDF
+                            </button>
+                            <button id="exportExcel" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en Excel">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto sm:table-mobile">
+                        <table class="min-w-full divide-y divide-gray-200" id="contractsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="id">ID Contrat</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="group">Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="premium">Prime Allouée</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="startDate">Date Début</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="endDate">Date Fin</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer sort-header" data-sort="status">Statut</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="contractsBody">
+                                <!-- Les données seront chargées dynamiquement -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                        <div class="text-sm text-gray-500" id="paginationInfo">Affichage de <span class="font-medium" id="startItem">0</span> à <span class="font-medium" id="endItem">0</span> sur <span class="font-medium" id="totalItems">0</span> entrées</div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 pagination-btn" id="prevPage" disabled aria-label="Page précédente">Précédent</button>
+                            <button class="px-3 py-1 border border-gray-200 rounded-lg text-sm text-gray-500 bg-white hover:bg-gray-50 pagination-btn" id="nextPage" disabled aria-label="Page suivante">Suivant</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="addContractModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">Ajouter un contrat PPA</h3>
+            <form id="addContractForm">
+                <input type="hidden" id="editingContractId">
+                <div class="mb-4">
+                    <label for="contractId" class="block text-sm font-medium text-gray-700">ID Contrat</label>
+                    <input type="text" id="contractId" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required aria-describedby="contractIdError">
+                    <p id="contractIdError" class="text-red-600 text-sm hidden">L'ID du contrat doit être unique.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="contractGroup" class="block text-sm font-medium text-gray-700">Groupe</label>
+                    <select id="contractGroup" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                        <option value="Groupe A">Groupe A</option>
+                        <option value="Groupe B">Groupe B</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="contractPremium" class="block text-sm font-medium text-gray-700">Prime Allouée (€)</label>
+                    <input type="number" id="contractPremium" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0" aria-describedby="contractPremiumError">
+                    <p id="contractPremiumError" class="text-red-600 text-sm hidden">La prime doit être positive.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="contractStartDate" class="block text-sm font-medium text-gray-700">Date Début</label>
+                    <input type="date" id="contractStartDate" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required aria-describedby="contractDateError">
+                </div>
+                <div class="mb-4">
+                    <label for="contractEndDate" class="block text-sm font-medium text-gray-700">Date Fin</label>
+                    <input type="date" id="contractEndDate" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required aria-describedby="contractDateError">
+                    <p id="contractDateError" class="text-red-600 text-sm hidden">La date de fin doit être postérieure à la date de début.</p>
+                </div>
+                <div class="mb-4">
+                    <label for="contractStatus" class="block text-sm font-medium text-gray-700">Statut</label>
+                    <select id="contractStatus" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                        <option value="Actif">Actif</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Inactif">Inactif</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Valider le contrat">Ajouter</button>
+            </form>
+            <button id="closeModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+        <div class="modal-content">
+            <h3 id="importModalTitle" class="text-lg font-semibold text-gray-800 mb-4">Importer des contrats</h3>
+            <form id="importForm" class="mb-4">
+                <label for="importFile" class="block text-sm font-medium text-gray-700">Fichier CSV</label>
+                <input type="file" id="importFile" accept=".csv" class="mt-1 p-2 w-full border border-gray-300 rounded-md" aria-describedby="importFileError">
+                <p id="importFileError" class="text-red-600 text-sm hidden">Veuillez sélectionner un fichier CSV valide.</p>
+                <button type="submit" class="mt-2 bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Importer le fichier">Importer</button>
+            </form>
+            <ul id="importList" class="list-disc pl-5 space-y-2">
+                <li>Import 1: 50 contrats - 20/06/2025 10:15 AM</li>
+                <li>Import 2: 95 contrats - 22/06/2025 14:30 PM</li>
+            </ul>
+            <button id="closeImportModal" class="mt-4 text-red-600 hover:text-red-800" aria-label="Fermer le modal">Fermer</button>
+        </div>
+    </div>
+
+    <div id="iaAnalysisModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="iaModalTitle">
+        <div class="modal-content">
+            <h3 id="iaModalTitle" class="text-lg font-semibold text-gray-800 mb-4">Analyse IA des Contrats PPA</h3>
+            <p class="text-gray-600 mb-4">Analyse des contrats PPA pour identifier les tendances, anomalies et recommandations IFRS17.</p>
+            <div id="ia-analysis-results" class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <p class="text-gray-500 italic">Cliquez sur "Analyser" pour lancer l'analyse IA.</p>
+            </div>
+            <div class="h-64 mb-4">
+                <canvas id="iaChart" class="w-full h-full"></canvas>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="closeIAAnalysisModal" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300" aria-label="Fermer le modal">Fermer</button>
+                <button id="runIAAnalysis" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500" aria-label="Lancer l'analyse IA">Analyser</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données d'exemple pour les contrats PPA
+        let contractsData = [
+            { id: "PPA001", group: "Groupe A", premium: 150000, startDate: "2025-01-01", endDate: "2027-12-31", status: "Actif" },
+            { id: "PPA002", group: "Groupe B", premium: 200000, startDate: "2025-03-15", endDate: "2028-03-14", status: "En attente" },
+            { id: "PPA003", group: "Groupe A", premium: 120000, startDate: "2024-11-01", endDate: "2027-10-31", status: "Actif" },
+            { id: "PPA004", group: "Groupe B", premium: 180000, startDate: "2025-02-10", endDate: "2028-02-09", status: "Inactif" },
+            { id: "PPA005", group: "Groupe A", premium: 90000, startDate: "2025-05-20", endDate: "2028-05-19", status: "Actif" },
+            { id: "PPA006", group: "Groupe B", premium: 220000, startDate: "2024-12-15", endDate: "2027-12-14", status: "En attente" },
+            { id: "PPA007", group: "Groupe A", premium: 130000, startDate: "2025-04-05", endDate: "2028-04-04", status: "Actif" },
+            { id: "PPA008", group: "Groupe B", premium: 170000, startDate: "2025-01-25", endDate: "2028-01-24", status: "Inactif" },
+            { id: "PPA009", group: "Groupe A", premium: 110000, startDate: "2025-06-10", endDate: "2028-06-09", status: "Actif" },
+            { id: "PPA010", group: "Groupe B", premium: 190000, startDate: "2025-03-01", endDate: "2028-02-28", status: "En attente" }
+        ];
+
+        // Variables globales
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let currentSort = { column: null, direction: 'asc' };
+        let premiumChartInstance = null;
+        let iaChartInstance = null;
+        let filteredContracts = [];
+
+        // Initialisation lorsque le DOM est chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialiser les icônes Lucide
+            lucide.createIcons();
+            
+            // Mettre à jour l'heure actuelle
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000); // Mise à jour chaque minute
+            
+            // Initialiser les graphiques
+            initPremiumChart();
+            
+            // Charger les données des contrats
+            filteredContracts = [...contractsData];
+            renderContractsTable();
+            
+            // Configurer les écouteurs d'événements
+            setupEventListeners();
+        });
+
+        // Mettre à jour l'heure actuelle
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.getElementById('current-time').textContent = now.toLocaleDateString('fr-FR', options);
+        }
+
+        // Initialiser le graphique des primes
+        function initPremiumChart() {
+            const ctx = document.getElementById('premiumChart').getContext('2d');
+            
+            // Calculer les données par groupe
+            const groupData = {
+                'Groupe A': contractsData.filter(c => c.group === 'Groupe A').reduce((sum, c) => sum + c.premium, 0),
+                'Groupe B': contractsData.filter(c => c.group === 'Groupe B').reduce((sum, c) => sum + c.premium, 0)
+            };
+            
+            // Calculer les données par statut
+            const statusData = {
+                'Actif': contractsData.filter(c => c.status === 'Actif').reduce((sum, c) => sum + c.premium, 0),
+                'En attente': contractsData.filter(c => c.status === 'En attente').reduce((sum, c) => sum + c.premium, 0),
+                'Inactif': contractsData.filter(c => c.status === 'Inactif').reduce((sum, c) => sum + c.premium, 0)
+            };
+            
+            premiumChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(groupData),
+                    datasets: [{
+                        label: 'Primes par groupe (€)',
+                        data: Object.values(groupData),
+                        backgroundColor: ['#0ea5e9', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `€${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Mettre à jour le graphique en fonction du filtre
+            document.getElementById('chartFilter').addEventListener('change', function() {
+                if (this.value === 'status') {
+                    premiumChartInstance.data.labels = Object.keys(statusData);
+                    premiumChartInstance.data.datasets[0].data = Object.values(statusData);
+                    premiumChartInstance.data.datasets[0].label = 'Primes par statut (€)';
+                    premiumChartInstance.data.datasets[0].backgroundColor = ['#10b981', '#f59e0b', '#ef4444'];
+                } else {
+                    premiumChartInstance.data.labels = Object.keys(groupData);
+                    premiumChartInstance.data.datasets[0].data = Object.values(groupData);
+                    premiumChartInstance.data.datasets[0].label = 'Primes par groupe (€)';
+                    premiumChartInstance.data.datasets[0].backgroundColor = ['#0ea5e9', '#8b5cf6'];
+                }
+                premiumChartInstance.update();
+            });
+        }
+
+        // Configurer les écouteurs d'événements
+        function setupEventListeners() {
+            // Bouton d'ajout de contrat
+            document.getElementById('addContract').addEventListener('click', openAddContractModal);
+            
+            // Bouton d'import CSV
+            document.getElementById('importCSV').addEventListener('click', openImportModal);
+            
+            // Fermeture des modals
+            document.getElementById('closeModal').addEventListener('click', closeModals);
+            document.getElementById('closeImportModal').addEventListener('click', closeModals);
+            document.getElementById('closeIAAnalysisModal').addEventListener('click', closeModals);
+            
+            // Soumission du formulaire d'ajout de contrat
+            document.getElementById('addContractForm').addEventListener('submit', handleContractSubmit);
+            
+            // Soumission du formulaire d'import
+            document.getElementById('importForm').addEventListener('submit', handleFileImport);
+            
+            // Boutons d'export
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            
+            // Pagination
+            document.getElementById('prevPage').addEventListener('click', goToPrevPage);
+            document.getElementById('nextPage').addEventListener('click', goToNextPage);
+            
+            // Recherche
+            document.getElementById('contract-search').addEventListener('input', handleSearch);
+            
+            // Filtres
+            document.getElementById('groupFilter').addEventListener('change', applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFilter').addEventListener('change', applyFilters);
+            document.getElementById('premiumMin').addEventListener('input', applyFilters);
+            document.getElementById('premiumMax').addEventListener('input', applyFilters);
+            
+            // Réinitialisation des filtres
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            
+            // Analyse IA
+            document.getElementById('analyzeIA').addEventListener('click', openIAAnalysisModal);
+            document.getElementById('runIAAnalysis').addEventListener('click', runIAAnalysis);
+            
+            // Tri des colonnes
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.addEventListener('click', () => sortTable(header.dataset.sort));
+            });
+        }
+
+        // Afficher les contrats dans le tableau
+        function renderContractsTable() {
+            const tbody = document.getElementById('contractsBody');
+            tbody.innerHTML = '';
+            
+            const totalItems = filteredContracts.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            // Mettre à jour la pagination
+            updatePagination(totalItems, totalPages);
+            
+            // Calculer les indices de début et de fin
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            
+            // Mettre à jour l'information de pagination
+            document.getElementById('startItem').textContent = totalItems > 0 ? startIndex + 1 : 0;
+            document.getElementById('endItem').textContent = endIndex;
+            document.getElementById('totalItems').textContent = totalItems;
+            
+            // Remplir le tableau avec les données de la page courante
+            for (let i = startIndex; i < endIndex; i++) {
+                const contract = filteredContracts[i];
+                const row = document.createElement('tr');
+                row.className = 'data-card';
+                
+                // Formater les dates
+                const startDate = new Date(contract.startDate).toLocaleDateString('fr-FR');
+                const endDate = new Date(contract.endDate).toLocaleDateString('fr-FR');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="ID Contrat">${contract.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="Groupe">${contract.group}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="Prime Allouée">€${contract.premium.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="Date Début">${startDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="Date Fin">${endDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap" data-label="Statut">
+                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium status-${getStatusClass(contract.status)}">${contract.status}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" data-label="Actions">
+                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="${contract.id}" aria-label="Modifier le contrat ${contract.id}">
+                            <i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i>
+                        </button>
+                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="${contract.id}" aria-label="Supprimer le contrat ${contract.id}">
+                            <i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // Réinitialiser les icônes Lucide pour les nouveaux éléments
+            lucide.createIcons();
+            
+            // Ajouter les écouteurs d'événements pour les boutons d'édition et de suppression
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editContract(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteContract(btn.dataset.id));
+            });
+        }
+
+        // Obtenir la classe CSS pour le statut
+        function getStatusClass(status) {
+            switch (status.toLowerCase()) {
+                case 'actif': return 'active';
+                case 'en attente': return 'pending';
+                case 'inactif': return 'inactive';
+                default: return 'active';
+            }
+        }
+
+        // Mettre à jour la pagination
+        function updatePagination(totalItems, totalPages) {
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        // Aller à la page précédente
+        function goToPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderContractsTable();
+            }
+        }
+
+        // Aller à la page suivante
+        function goToNextPage() {
+            const totalPages = Math.ceil(filteredContracts.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderContractsTable();
+            }
+        }
+
+        // Ouvrir le modal d'ajout de contrat
+        function openAddContractModal() {
+            document.getElementById('modalTitle').textContent = 'Ajouter un contrat PPA';
+            document.getElementById('editingContractId').value = '';
+            document.getElementById('contractId').value = '';
+            document.getElementById('contractGroup').value = 'Groupe A';
+            document.getElementById('contractPremium').value = '';
+            
+            // Définir les dates par défaut (aujourd'hui et +3 ans)
+            const today = new Date();
+            const threeYearsLater = new Date();
+            threeYearsLater.setFullYear(today.getFullYear() + 3);
+            
+            document.getElementById('contractStartDate').value = today.toISOString().split('T')[0];
+            document.getElementById('contractEndDate').value = threeYearsLater.toISOString().split('T')[0];
+            
+            document.getElementById('contractStatus').value = 'Actif';
+            document.getElementById('addContractForm').querySelector('button[type="submit"]').textContent = 'Ajouter';
+            
+            document.getElementById('addContractModal').style.display = 'flex';
+        }
+
+        // Ouvrir le modal d'import
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+        }
+
+        // Ouvrir le modal d'analyse IA
+        function openIAAnalysisModal() {
+            document.getElementById('iaAnalysisModal').style.display = 'flex';
+        }
+
+        // Fermer tous les modals
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // Gérer la soumission du formulaire de contrat
+        function handleContractSubmit(e) {
+            e.preventDefault();
+            
+            const contractId = document.getElementById('contractId').value;
+            const group = document.getElementById('contractGroup').value;
+            const premium = parseFloat(document.getElementById('contractPremium').value);
+            const startDate = document.getElementById('contractStartDate').value;
+            const endDate = document.getElementById('contractEndDate').value;
+            const status = document.getElementById('contractStatus').value;
+            const editingId = document.getElementById('editingContractId').value;
+            
+            // Validation des dates
+            if (new Date(endDate) <= new Date(startDate)) {
+                document.getElementById('contractDateError').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('contractDateError').classList.add('hidden');
+            
+            // Vérifier si l'ID est unique (sauf en mode édition)
+            if (!editingId && contractsData.some(contract => contract.id === contractId)) {
+                document.getElementById('contractIdError').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('contractIdError').classList.add('hidden');
+            
+            // Validation de la prime
+            if (premium <= 0) {
+                document.getElementById('contractPremiumError').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('contractPremiumError').classList.add('hidden');
+            
+            if (editingId) {
+                // Modifier le contrat existant
+                const index = contractsData.findIndex(contract => contract.id === editingId);
+                if (index !== -1) {
+                    contractsData[index] = { id: contractId, group, premium, startDate, endDate, status };
+                }
+            } else {
+                // Ajouter un nouveau contrat
+                contractsData.push({ id: contractId, group, premium, startDate, endDate, status });
+            }
+            
+            // Appliquer les filtres actuels et rafraîchir le tableau
+            applyFilters();
+            closeModals();
+            showToast('Contrat enregistré avec succès');
+        }
+
+        // Éditer un contrat
+        function editContract(contractId) {
+            const contract = contractsData.find(c => c.id === contractId);
+            if (contract) {
+                document.getElementById('modalTitle').textContent = 'Modifier le contrat PPA';
+                document.getElementById('editingContractId').value = contract.id;
+                document.getElementById('contractId').value = contract.id;
+                document.getElementById('contractGroup').value = contract.group;
+                document.getElementById('contractPremium').value = contract.premium;
+                document.getElementById('contractStartDate').value = contract.startDate;
+                document.getElementById('contractEndDate').value = contract.endDate;
+                document.getElementById('contractStatus').value = contract.status;
+                document.getElementById('addContractForm').querySelector('button[type="submit"]').textContent = 'Modifier';
+                
+                document.getElementById('addContractModal').style.display = 'flex';
+            }
+        }
+
+        // Supprimer un contrat
+        function deleteContract(contractId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce contrat ?')) {
+                contractsData = contractsData.filter(contract => contract.id !== contractId);
+                applyFilters(); // Réappliquer les filtres pour mettre à jour l'affichage
+                showToast('Contrat supprimé avec succès');
+            }
+        }
+
+        // Gérer l'import de fichier
+        function handleFileImport(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('importFileError').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('importFileError').classList.add('hidden');
+            
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    // Traiter les données importées
+                    const newContracts = results.data
+                        .filter(row => row['ID Contrat'] && row.Groupe && row['Prime Allouée'] && row['Date Début'] && row['Date Fin'] && row.Statut)
+                        .map(row => ({
+                            id: row['ID Contrat'],
+                            group: row.Groupe,
+                            premium: parseFloat(row['Prime Allouée'].replace('€', '').replace(/,/g, '')) || 0,
+                            startDate: formatDateForStorage(row['Date Début']),
+                            endDate: formatDateForStorage(row['Date Fin']),
+                            status: row.Statut
+                        }));
+                    
+                    // Ajouter les nouveaux contrats
+                    contractsData = [...contractsData, ...newContracts];
+                    
+                    // Mettre à jour l'interface
+                    applyFilters();
+                    closeModals();
+                    showToast(`${newContracts.length} contrats importés avec succès`);
+                    
+                    // Mettre à jour la liste des imports
+                    const importList = document.getElementById('importList');
+                    const now = new Date();
+                    const importDate = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}`;
+                    const newImportItem = document.createElement('li');
+                    newImportItem.textContent = `Import: ${newContracts.length} contrats - ${importDate}`;
+                    importList.prepend(newImportItem);
+                },
+                error: function(error) {
+                    console.error('Erreur lors de l\'import:', error);
+                    showToast('Erreur lors de l\'import du fichier', 'error');
+                }
+            });
+        }
+
+        // Formater la date pour le stockage (YYYY-MM-DD)
+        function formatDateForStorage(dateString) {
+            // Gérer différents formats de date
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateString;
+        }
+
+        // Exporter en CSV
+        function exportToCSV() {
+            const headers = ['ID Contrat', 'Groupe', 'Prime Allouée', 'Date Début', 'Date Fin', 'Statut'];
+            const csvData = filteredContracts.map(contract => [
+                contract.id,
+                contract.group,
+                `€${contract.premium.toLocaleString()}`,
+                new Date(contract.startDate).toLocaleDateString('fr-FR'),
+                new Date(contract.endDate).toLocaleDateString('fr-FR'),
+                contract.status
+            ]);
+            
+            const csvContent = [headers, ...csvData].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'contrats_ppa.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Export CSV réalisé avec succès');
+        }
+
+        // Exporter en PDF
+        function exportToPDF() {
+            const element = document.getElementById('contractsTable');
+            const options = {
+                margin: 10,
+                filename: 'contrats_ppa.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(options).from(element).save();
+            showToast('Export PDF réalisé avec succès');
+        }
+
+        // Exporter en Excel
+        function exportToExcel() {
+            // Préparer les données pour Excel
+            const data = filteredContracts.map(contract => ({
+                'ID Contrat': contract.id,
+                'Groupe': contract.group,
+                'Prime Allouée': contract.premium,
+                'Date Début': new Date(contract.startDate).toLocaleDateString('fr-FR'),
+                'Date Fin': new Date(contract.endDate).toLocaleDateString('fr-FR'),
+                'Statut': contract.status
+            }));
+            
+            // Créer un classeur et une feuille
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Contrats PPA');
+            
+            // Exporter le fichier
+            XLSX.writeFile(workbook, 'contrats_ppa.xlsx');
+            showToast('Export Excel réalisé avec succès');
+        }
+
+        // Gérer la recherche
+        function handleSearch() {
+            applyFilters();
+        }
+
+        // Appliquer tous les filtres
+        function applyFilters() {
+            const searchTerm = document.getElementById('contract-search').value.toLowerCase();
+            const groupFilter = document.getElementById('groupFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const premiumMin = document.getElementById('premiumMin').value ? parseFloat(document.getElementById('premiumMin').value) : 0;
+            const premiumMax = document.getElementById('premiumMax').value ? parseFloat(document.getElementById('premiumMax').value) : Number.MAX_SAFE_INTEGER;
+            
+            filteredContracts = contractsData.filter(contract => {
+                // Filtre de recherche
+                const matchesSearch = searchTerm === '' || 
+                    contract.id.toLowerCase().includes(searchTerm) ||
+                    contract.group.toLowerCase().includes(searchTerm) ||
+                    contract.status.toLowerCase().includes(searchTerm);
+                
+                // Filtre de groupe
+                const matchesGroup = groupFilter === '' || contract.group === groupFilter;
+                
+                // Filtre de statut
+                const matchesStatus = statusFilter === '' || contract.status === statusFilter;
+                
+                // Filtre de date
+                const matchesDate = dateFilter === '' || contract.startDate === dateFilter;
+                
+                // Filtre de prime
+                const matchesPremium = contract.premium >= premiumMin && contract.premium <= premiumMax;
+                
+                return matchesSearch && matchesGroup && matchesStatus && matchesDate && matchesPremium;
+            });
+            
+            currentPage = 1;
+            renderContractsTable();
+        }
+
+        // Réinitialiser les filtres
+        function resetFilters() {
+            document.getElementById('contract-search').value = '';
+            document.getElementById('groupFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('premiumMin').value = '';
+            document.getElementById('premiumMax').value = '';
+            
+            applyFilters();
+        }
+
+        // Trier le tableau
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Mettre à jour les indicateurs de tri visuels
+            document.querySelectorAll('.sort-header').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.sort === column) {
+                    header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+            
+            // Trier les données
+            filteredContracts.sort((a, b) => {
+                let valueA, valueB;
+                
+                switch (column) {
+                    case 'id':
+                        valueA = a.id;
+                        valueB = b.id;
+                        break;
+                    case 'group':
+                        valueA = a.group;
+                        valueB = b.group;
+                        break;
+                    case 'premium':
+                        valueA = a.premium;
+                        valueB = b.premium;
+                        break;
+                    case 'startDate':
+                        valueA = new Date(a.startDate);
+                        valueB = new Date(b.startDate);
+                        break;
+                    case 'endDate':
+                        valueA = new Date(a.endDate);
+                        valueB = new Date(b.endDate);
+                        break;
+                    case 'status':
+                        valueA = a.status;
+                        valueB = b.status;
+                        break;
+                    default:
+                        valueA = a.id;
+                        valueB = b.id;
+                }
+                
+                if (valueA < valueB) return currentSort.direction === 'asc' ? -1 : 1;
+                if (valueA > valueB) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            renderContractsTable();
+        }
+
+        // Exécuter l'analyse IA (simulée)
+        function runIAAnalysis() {
+            const resultsDiv = document.getElementById('ia-analysis-results');
+            resultsDiv.innerHTML = '<p class="text-gray-500 italic">Analyse en cours...</p>';
+            
+            // Simuler un délai d'analyse
+            setTimeout(() => {
+                // Générer des résultats d'analyse simulés
+                const totalPremium = filteredContracts.reduce((sum, c) => sum + c.premium, 0);
+                const avgPremium = totalPremium / filteredContracts.length;
+                const activeContracts = filteredContracts.filter(c => c.status === 'Actif').length;
+                const pendingContracts = filteredContracts.filter(c => c.status === 'En attente').length;
+                
+                resultsDiv.innerHTML = `
+                    <h4 class="font-semibold text-gray-800 mb-2">Résultats de l'analyse IA</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Valeur totale des primes: <strong>€${totalPremium.toLocaleString()}</strong></li>
+                        <li>Prime moyenne: <strong>€${avgPremium.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></li>
+                        <li>Contrats actifs: <strong>${activeContracts}</strong></li>
+                        <li>Contrats en attente: <strong>${pendingContracts}</strong></li>
+                        <li>Recommandation IFRS17: <strong>Allocation optimisée des primes</strong></li>
+                    </ul>
+                `;
+                
+                // Mettre à jour le graphique d'analyse IA
+                updateIAChart();
+                
+            }, 2000);
+        }
+
+        // Mettre à jour le graphique d'analyse IA
+        function updateIAChart() {
+            const ctx = document.getElementById('iaChart').getContext('2d');
+            
+            if (iaChartInstance) {
+                iaChartInstance.destroy();
+            }
+            
+            // Données pour le graphique d'analyse IA
+            const statusCounts = {
+                'Actif': filteredContracts.filter(c => c.status === 'Actif').length,
+                'En attente': filteredContracts.filter(c => c.status === 'En attente').length,
+                'Inactif': filteredContracts.filter(c => c.status === 'Inactif').length
+            };
+            
+            iaChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // Afficher une notification toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = type === 'success' ? 'toast bg-green-500 text-white p-4 rounded-lg shadow-lg' : 'toast bg-red-500 text-white p-4 rounded-lg shadow-lg';
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Fermer les modals en cliquant à l'extérieur
+        window.addEventListener('click', function(e) {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

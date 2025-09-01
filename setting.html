@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFRS17 PPA | Paramètres</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e'
+                        },
+                        dark: { 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    boxShadow: { 'soft': '0 4px 20px 0 rgba(0, 0, 0, 0.05)', 'card': '0 2px 8px rgba(0, 0, 0, 0.08)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-divider { border-color: rgba(255, 255, 255, 0.1); }
+        .data-card { transition: all 0.3s ease; }
+        .data-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 50; }
+        .modal-content { background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; }
+        .toast { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-dark-900 text-white">
+                <div class="flex items-center justify-between h-16 px-6 border-b sidebar-divider">
+                    <div class="flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-6 h-6 text-primary-400 mr-2" aria-hidden="true"></i>
+                        <span class="text-xl font-semibold">IFRS17 PPA</span>
+                    </div>
+                </div>
+                <div class="flex flex-col flex-grow px-4 py-6 overflow-y-auto">
+                    <nav class="space-y-1">
+                        <a href="dashboard.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Tableau de bord
+                        </a>
+                        <a href="contract.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Contrats
+                        </a>
+                        <a href="calculations.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="calculator" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Calculs PPA
+                        </a>
+                        <a href="reporting.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800">
+                            <i data-lucide="pie-chart" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Reporting
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-800 text-white" aria-current="page">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3" aria-hidden="true"></i>
+                            Paramètres
+                        </a>
+                    </nav>
+                    <div class="mt-auto px-4 pt-6">
+                        <div class="bg-dark-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <img src="https://picsum.photos/40?random=3" alt="Photo de profil" class="rounded-full w-10 h-10">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-white">Admin User</p>
+                                    <p class="text-xs text-gray-400">Administrateur</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-2xl font-bold text-dark-900">Paramètres</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Rechercher..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500" aria-label="Rechercher des paramètres">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4" aria-hidden="true"></i>
+                        </div>
+                        <button class="p-2 text-gray-500 hover:text-gray-700 relative" aria-label="Notifications">
+                            <i data-lucide="bell" class="w-5 h-5" aria-hidden="true"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="p-6">
+                <!-- Toast Notification -->
+                <div id="toast" class="toast bg-green-500 text-white p-4 rounded-lg shadow-lg">
+                    Action effectuée avec succès !
+                </div>
+
+                <!-- General Settings -->
+                <div class="bg-white rounded-xl shadow-card p-6 mb-8 border border-gray-100">
+                    <h3 class="font-semibold text-gray-800 mb-4">Paramètres Généraux</h3>
+                    <form id="generalSettingsForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="defaultDiscountRate" class="block text-sm font-medium text-gray-700">Taux de Remise par Défaut (%)</label>
+                                <input type="number" id="defaultDiscountRate" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="2.5" required min="0">
+                            </div>
+                            <div>
+                                <label for="defaultAIAdjustment" class="block text-sm font-medium text-gray-700">Ajustement IA par Défaut (%)</label>
+                                <input type="number" id="defaultAIAdjustment" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="1.0" required min="0">
+                            </div>
+                            <div>
+                                <label for="currency" class="block text-sm font-medium text-gray-700">Devise</label>
+                                <select id="currency" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600">
+                                    <option value="EUR" selected>EUR (€)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="calculationFrequency" class="block text-sm font-medium text-gray-700">Fréquence des Calculs</label>
+                                <select id="calculationFrequency" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600">
+                                    <option value="monthly" selected>Mensuelle</option>
+                                    <option value="quarterly">Trimestrielle</option>
+                                    <option value="yearly">Annuelle</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="mt-4 bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Sauvegarder les paramètres généraux">Sauvegarder</button>
+                    </form>
+                </div>
+
+                <!-- IFRS17 Assumptions -->
+                <div class="bg-white rounded-xl shadow-card p-6 mb-8 border border-gray-100">
+                    <h3 class="font-semibold text-gray-800 mb-4">Hypothèses IFRS17</h3>
+                    <form id="assumptionsForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="mortalityRate" class="block text-sm font-medium text-gray-700">Taux de Mortalité (%)</label>
+                                <input type="number" id="mortalityRate" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="0.5" required min="0">
+                            </div>
+                            <div>
+                                <label for="lapseRate" class="block text-sm font-medium text-gray-700">Taux de Rachat (%)</label>
+                                <input type="number" id="lapseRate" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="1.5" required min="0">
+                            </div>
+                            <div>
+                                <label for="inflationRate" class="block text-sm font-medium text-gray-700">Taux d'Inflation (%)</label>
+                                <input type="number" id="inflationRate" step="0.01" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="2.0" required min="0">
+                            </div>
+                            <div>
+                                <label for="expenseAssumption" class="block text-sm font-medium text-gray-700">Hypothèse de Frais (€)</label>
+                                <input type="number" id="expenseAssumption" step="100" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" value="10000" required min="0">
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2 mt-4">
+                            <button type="submit" class="bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Sauvegarder les hypothèses">Sauvegarder</button>
+                            <button type="button" id="exportAssumptionsCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Contract Groups Management -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Gestion des Groupes de Contrats</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="addGroup" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Ajouter un groupe">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Ajouter Groupe
+                            </button>
+                            <button id="exportGroupsCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="groupsTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="groupId">ID Groupe</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="name">Nom</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="description">Description</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="groupsBody">
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">GRP001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Groupe A</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Contrats Vie</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="GRP001" aria-label="Modifier le groupe GRP001"><i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="GRP001" aria-label="Supprimer le groupe GRP001"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">GRP002</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Groupe B</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Contrats Santé</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="GRP002" aria-label="Modifier le groupe GRP002"><i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="GRP002" aria-label="Supprimer le groupe GRP002"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Report Validation Rules -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-gray-100 mb-8">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-semibold text-gray-800">Règles de Validation des Rapports</h3>
+                        <div class="flex items-center space-x-2">
+                            <button id="addRule" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Ajouter une règle">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Ajouter Règle
+                            </button>
+                            <button id="exportRulesCSV" class="flex items-center text-sm font-medium text-primary-600 hover:text-primary-800" aria-label="Exporter en CSV">
+                                <i data-lucide="download" class="w-4 h-4 mr-1" aria-hidden="true"></i>
+                                Exporter CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200" id="rulesTable">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="ruleId">ID Règle</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="metric">Métrique</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="threshold">Seuil (€)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort="action">Action</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="rulesBody">
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">RUL001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">CSM</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">500000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Alerte si inférieur</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="RUL001" aria-label="Modifier la règle RUL001"><i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="RUL001" aria-label="Supprimer la règle RUL001"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="data-card">
+                                    <td class="px-6 py-4 whitespace-nowrap">RUL002</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">LRC</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">400000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">Alerte si supérieur</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="edit-btn text-primary-600 hover:text-primary-800" data-id="RUL002" aria-label="Modifier la règle RUL002"><i data-lucide="edit" class="w-4 h-4" aria-hidden="true"></i></button>
+                                        <button class="delete-btn ml-2 text-red-600 hover:text-red-800" data-id="RUL002" aria-label="Supprimer la règle RUL002"><i data-lucide="trash" class="w-4 h-4" aria-hidden="true"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Modal for Adding/Editing Group -->
+        <div id="groupModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+            <div class="modal-content">
+                <h3 id="groupModalTitle" class="text-lg font-semibold text-gray-800 mb-4">Ajouter/Modifier Groupe</h3>
+                <form id="groupForm">
+                    <div class="mb-4">
+                        <label for="groupId" class="block text-sm font-medium text-gray-700">ID Groupe</label>
+                        <input type="text" id="groupId" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" readonly>
+                    </div>
+                    <div class="mb-4">
+                        <label for="groupName" class="block text-sm font-medium text-gray-700">Nom</label>
+                        <input type="text" id="groupName" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="groupDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                        <input type="text" id="groupDescription" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="closeGroupModal" class="text-red-600 hover:text-red-800" aria-label="Annuler">Annuler</button>
+                        <button type="submit" class="bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Sauvegarder le groupe">Sauvegarder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal for Adding/Editing Validation Rule -->
+        <div id="ruleModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="ruleModalTitle">
+            <div class="modal-content">
+                <h3 id="ruleModalTitle" class="text-lg font-semibold text-gray-800 mb-4">Ajouter/Modifier Règle de Validation</h3>
+                <form id="ruleForm">
+                    <div class="mb-4">
+                        <label for="ruleId" class="block text-sm font-medium text-gray-700">ID Règle</label>
+                        <input type="text" id="ruleId" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" readonly>
+                    </div>
+                    <div class="mb-4">
+                        <label for="ruleMetric" class="block text-sm font-medium text-gray-700">Métrique</label>
+                        <select id="ruleMetric" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                            <option value="CSM">CSM</option>
+                            <option value="LRC">LRC</option>
+                            <option value="RA">RA</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="ruleThreshold" class="block text-sm font-medium text-gray-700">Seuil (€)</label>
+                        <input type="number" id="ruleThreshold" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required min="0">
+                    </div>
+                    <div class="mb-4">
+                        <label for="ruleAction" class="block text-sm font-medium text-gray-700">Action</label>
+                        <select id="ruleAction" class="mt-1 p-2 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-600" required>
+                            <option value="Alerte si inférieur">Alerte si inférieur</option>
+                            <option value="Alerte si supérieur">Alerte si supérieur</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="closeRuleModal" class="text-red-600 hover:text-red-800" aria-label="Annuler">Annuler</button>
+                        <button type="submit" class="bg-primary-600 text-white p-2 rounded-md hover:bg-primary-500" aria-label="Sauvegarder la règle">Sauvegarder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        
+        <script src="../frontend/static/js/setting.js"></script>
+    </body>
+</html>
